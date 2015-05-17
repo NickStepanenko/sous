@@ -1,0 +1,23 @@
+commit e3c853a4282dfe8f000685dc1d39bd55a4a946c4
+Author: Nick Stepanenko <massaalonso@yandex.ru>
+Date:   Sun May 17 16:54:58 2015 +0800
+
+    Recovered main.js
+
+commit be4929d2307043334b29b872760f31b1f2387a10
+Author: Nick Stepanenko <massaalonso@yandex.ru>
+Date:   Sun May 17 16:54:24 2015 +0800
+
+    Clean main.js
+
+commit bd0049f4d0639be5d3ff5f666c2568c7008cdaef
+Author: Nick Stepanenko <massaalonso@yandex.ru>
+Date:   Sun May 17 16:46:31 2015 +0800
+
+    New commit
+
+commit 8e1ca32cec51a8884adff9ff63ad53f459ce5d8c
+Author: Nick <massaalonso@yandex.ru>
+Date:   Sun May 17 16:40:02 2015 +0800
+
+    Initial commit
