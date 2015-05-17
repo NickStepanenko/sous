@@ -1,0 +1,22 @@
+{
+  "name": "sous",
+  "version": "0.0.1",
+  "description": "Sous project",
+  "main": "main.js",
+  "dependencies": {
+},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NickStepanenko/sous.git"
+  },
+  "author": "Nick Stepanenko <massaalonso@yandex.ru>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NickStepanenko/sous/issues"
+  },
+  "homepage": "https://github.com/NickStepanenko/sous"
+}
