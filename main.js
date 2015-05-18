@@ -148,7 +148,9 @@ fs.exists('.git', function (exists) {
                         listOfCommits[listOfCommits.length] = commit;
                     }
 
-                    callback(null, listOfCommits.reverse());
+                    var commitsData = listOfCommits.reverse();
+
+                    callback(null, commitsData);
 
                     if (error !== null) {
                         console.log('stderr: ' + stderr);
@@ -157,27 +159,18 @@ fs.exists('.git', function (exists) {
                 });
             },
             function getCommitsContent(commits, callback) {
-                console.log(commits);
                 var commitsData = commits;
 
                 for(i=1; i<commitsData.length; i++) {
-                    cp.exec('git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, function(error, stdout, stderr) {
-                        commitsData[i].content = stdout;
-
-                        if (error !== null) {
-                            console.log('stderr: ' + stderr);
-                            console.log('exec error: ' + error);
-                        }
-                    });
+                    commitsData[i].content = cp.execSync('git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit).toString('utf8');
                 }
 
                 callback(null, commitsData);
             }
         ], function (err, result) {
-            fs.writeFileSync("patches.sousp", result);
+            for(i=0; i<result.length; i++) {
+                fs.writeFileSync("patches.sousp", JSON.stringify(result[i]));
+            }
         });
-
-        //commitsInfo = JSON.parse(fs.readFileSync("patches.sousp"));
-        //console.log(commitsInfo);
     }
 });
