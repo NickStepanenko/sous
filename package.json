@@ -4,7 +4,8 @@
   "description": "Sous project",
   "main": "main.js",
   "dependencies": {
-},
+    "async": "*"
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
