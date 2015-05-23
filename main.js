@@ -7,6 +7,57 @@ var cp = require('child_process');
 
 var async = require('async');
 
+function readyStringToJSON(stringData) {
+    var obj = {};
+    var data = stringData.split(',"');
+
+    obj.commit = data[0].slice(data[0].indexOf(':')+2, data[0].length-1);
+    obj.author = data[1].slice(data[1].indexOf(':')+2, data[1].length-1);
+    obj.date = data[2].slice(data[2].indexOf(':')+2, data[2].length-1);
+    obj.comment = data[3].slice(data[3].indexOf(':')+2, data[3].length-1);
+    obj.content = data[4].slice(data[4].indexOf(':')+2, data[4].length-1);
+
+    return obj;
+}
+
+function nextState(commitNum, direction) {
+    var data = fs.readFileSync('patches.sousp').toString().split('},{"');
+    var newState = {};
+
+    for(i=0; i<data.length; i++) {
+        if(i==0) {
+            data[i] = data[i].slice(1);
+        } else if(i!=data.length-1) {
+            data[i] = '"' + data[i];
+        } else if(i==data.length-1) {
+            data[i] = '"' + data[i].slice(0, data[i].length-2);
+        }
+        data[i] = readyStringToJSON(data[i]);
+    }
+
+    console.log(data);
+
+    for(i=0; i<data.length; i++) {
+        if(data[i].commit == commitNum) {
+            if(direction == "Next") {
+                newState.commit = data[i+1].commit;
+                newState.author = data[i+1].author;
+                newState.date = data[i+1].date;
+                newState.comment = data[i+1].comment;
+                newState.content = data[i+1].content;
+            } else if(direction == "Back") {
+                newState.commit = data[i-1].commit;
+                newState.author = data[i-1].author;
+                newState.date = data[i-1].date;
+                newState.comment = data[i-1].comment;
+                newState.content = data[i-1].content;
+            }
+        }
+    }
+
+    return(newState);
+}
+
 function findData(text, keyword) {
     var data = [];
     var splittext = text.split('\n');
@@ -86,9 +137,15 @@ fs.exists('.git', function (exists) {
                 callback(null, commitsData);
             }
         ], function (err, result) {
+            var data = [];
+
             for(i=0; i<result.length; i++) {
-                fs.writeFileSync("patches.sousp", JSON.stringify(result[i]));
+                data[i] = JSON.stringify(result[i]);
             }
+
+            fs.writeFileSync("patches.sousp", data);
+
+            console.log(nextState("1e947f613e976945de85ae35ed923aa470f0be72"));
         });
     }
 });

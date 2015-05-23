@@ -1,1 +1,7 @@
 .idea
+node_modules
+patches.sousp
+comments.sousc
+package.json
+README.md
+test.js
