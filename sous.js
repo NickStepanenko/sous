@@ -137,7 +137,7 @@ fs.exists(__dirname + '/.git', function (exists) {
                 data[i] = JSON.stringify(result[i]);
             }
 
-            jsonHeader = "{ \"name\": \"hello world\", \"commits\": [";
+            jsonHeader = "{ \"name\": \"Commits Data\", \"commits\": [";
             jsonFooter = "] }";
 
             fs.writeFileSync("patches.json", jsonHeader + data + jsonFooter);
