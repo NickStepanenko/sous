@@ -1,7 +1,9 @@
 .idea
+bin
+lib
+.gitignore
+bower_components
 node_modules
-patches.sousp
-comments.sousc
+index.html
 package.json
 README.md
-test.js
