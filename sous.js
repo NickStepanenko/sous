@@ -72,12 +72,18 @@ function findCommitNumbers(text) {
     return commits;
 }
 
+function parseContent(content) {
+    var data = content.split('\n');
+    console.log(data);
+}
+
+
+
 fs.exists(__dirname + '/.git', function (exists) {
     if(exists) {
         async.waterfall([
             function getCommitsInfo(callback) {
                 cp.exec('git log', {cwd: __dirname}, function(error, stdout, stderr) {
-                    console.error(stdout);
                     var listOfCommits = [];
                     var authors = findData(stdout, "Author:");
                     var dates = findData(stdout, "Date:");
@@ -113,7 +119,14 @@ fs.exists(__dirname + '/.git', function (exists) {
                         cp.execSync(
                             'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, {cwd: __dirname}
                         ).toString('utf8');
+                    fs.writeFileSync("latestdiff.json", cp.execSync(
+                        'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, {cwd: __dirname}
+                    ).toString('utf8'));
                 }
+
+                parseContent(cp.execSync(
+                    'git diff' + ' ' + commitsData[commitsData.length-2].commit + ' ' + commitsData[commitsData.length-1].commit, {cwd: __dirname}
+                ).toString('utf8'));
 
                 callback(null, commitsData);
             }
@@ -129,7 +142,7 @@ fs.exists(__dirname + '/.git', function (exists) {
 
             fs.writeFileSync("patches.json", jsonHeader + data + jsonFooter);
 
-            console.log(nextState("1e947f613e976945de85ae35ed923aa470f0be72", "Next"));
+            //console.log(nextState("1e947f613e976945de85ae35ed923aa470f0be72", "Next"));
         });
     }
 });
