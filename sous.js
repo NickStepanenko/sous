@@ -142,10 +142,6 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                         ).toString('utf8')
                     );
 
-                    /*for(i=0; i< currentDiffData.length; i++) {
-                        currentDiffData = currentDiffData[i].split('\n');
-                    }*/
-
                     //fs.writeFileSync("latestdiff.json", currentDiffData);
 
                     /*commitsData[i].content =
