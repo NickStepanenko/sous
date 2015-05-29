@@ -176,11 +176,12 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             function getCommitsContent(commits, callback) {
                 var commitsData = commits;
 
-                commitsData[18].content = parseContent(
-                    cp.execSync(
-                        'git diff' + ' ' + commitsData[17].commit + ' ' + commitsData[18].commit
-                    ).toString('utf8')
-                );
+                for(i=1; i<commitsData.length; i++) {
+                    commitsData[i].content =
+                        parseContent(cp.execSync(
+                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
+                        ).toString('utf8'));
+                }
 
                 callback(null, commitsData);
             }
