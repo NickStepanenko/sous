@@ -79,21 +79,64 @@ function parseContent(content) {
         currentDiffData[i] = currentDiffData[i].split('\n');
     }
 
-    console.log(currentDiffData);
+    var files = [];
 
-    /*for(i=0; i<currentDiffData.length; i++) {
-        if(currentDiffData[i].indexOf('diff') == 0) {
-            var filename = currentDiffData[i].slice(
-                currentDiffData[i].indexOf('b/')+2, currentDiffData[i].length
-            );
-            for(j=i; j<currentDiffData.length; j++) {
-                if(currentDiffData[j].indexOf('@@') == 0) {
-                    var entryLine = currentDiffData[j].slice(2, currentDiffData[j].indexOf(' @@')).trim();
-                    console.log("21e2e12e21e21" + entryLine);
-                }
+    for(i=1; i<currentDiffData.length; i++) {
+        var fileData = {};
+
+        fileData.filename = currentDiffData[i][0].slice(currentDiffData[i][0].indexOf('b/')+2, currentDiffData[i][0].length);
+
+        if(currentDiffData[i][1].indexOf('deleted file mode') > -1) {
+            fileData.status = "Deleted";
+        } else
+        if (currentDiffData[i][1].indexOf('new file mode') > -1) {
+            fileData.status = "Created";
+        } else {
+            fileData.status = "Modified";
+        }
+
+        var changes = [];
+
+        var isHeader = true;
+        var isDataLine = false;
+        var record = false;
+        var localChanges = {};
+        var changesCode = "";
+
+        for(j=1; j<currentDiffData[i].length; j++) {
+            if(currentDiffData[i][j].indexOf('@@') == 0 && isHeader) {
+                localChanges.changesStartLine = currentDiffData[i][j].slice(4, currentDiffData[i][j].indexOf(','));
+                isHeader = false;
+                isDataLine = true;
+                record = true;
+            } else
+            if(currentDiffData[i][j].indexOf('@@') == 0 && record) {
+                localChanges.changesCode = changesCode;
+                changes[changes.length] = localChanges;
+
+                localChanges = {};
+                changesCode = "";
+                localChanges.changesStartLine = currentDiffData[i][j].slice(4, currentDiffData[i][j].indexOf(','));
+                isDataLine = true;
+            } else {
+                isDataLine = false;
+            }
+
+            if (!isHeader && !isDataLine && record) {
+                changesCode += currentDiffData[i][j] + '\n';
+            }
+
+            if(j == currentDiffData[i].length-1) {
+                localChanges.changesCode = changesCode;
+                changes[changes.length] = localChanges;
             }
         }
-    }*/
+
+        fileData.changes = changes;
+        files[files.length] = fileData;
+    }
+
+    return files;
 }
 
 
@@ -103,7 +146,6 @@ fs.exists(process.cwd() + '/.git', function (exists) {
         async.waterfall([
             function getCommitsInfo(callback) {
                 cp.exec('git log', function(error, stdout, stderr) {
-                    //console.log(cp.cwd());
                     var listOfCommits = [];
                     var authors = findData(stdout, "Author:");
                     var dates = findData(stdout, "Date:");
@@ -116,7 +158,7 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                             "author": authors[i],
                             "date": dates[i],
                             "comment": comments[i],
-                            "content": 'Original'
+                            "content": []
                         };
                         listOfCommits[listOfCommits.length] = commit;
                     }
@@ -134,29 +176,11 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             function getCommitsContent(commits, callback) {
                 var commitsData = commits;
 
-                //for(i=1; i<commitsData.length; i++) {
-                for(i=13; i<14; i++) {
-                    commitsData[i].content = parseContent(
-                        cp.execSync(
-                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
-                        ).toString('utf8')
-                    );
-
-                    //fs.writeFileSync("latestdiff.json", currentDiffData);
-
-                    /*commitsData[i].content =
-                        cp.execSync(
-                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
-                        ).toString('utf8');*/
-
-                    /*fs.writeFileSync("latestdiff.json", cp.execSync(
-                        'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, {cwd: __dirname}
-                    ).toString('utf8'));*/
-                }
-
-                /*parseContent(cp.execSync(
-                    'git diff' + ' ' + commitsData[commitsData.length-2].commit + ' ' + commitsData[commitsData.length-1].commit, {cwd: __dirname}
-                ).toString('utf8'));*/
+                commitsData[18].content = parseContent(
+                    cp.execSync(
+                        'git diff' + ' ' + commitsData[17].commit + ' ' + commitsData[18].commit
+                    ).toString('utf8')
+                );
 
                 callback(null, commitsData);
             }
@@ -171,8 +195,6 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             jsonFooter = "] }";
 
             fs.writeFileSync(process.cwd() + "/patches.json", jsonHeader + data + jsonFooter);
-
-            //console.log(nextState("1e947f613e976945de85ae35ed923aa470f0be72", "Next"));
         });
     } else {
         console.error("Directory .git did not found at " + process.cwd());
