@@ -84,7 +84,7 @@ function parseContent(content) {
     for(i=1; i<currentDiffData.length; i++) {
         var fileData = {};
 
-        fileData.filename = currentDiffData[i][0].slice(currentDiffData[i][0].indexOf('b/')+2, currentDiffData[i][0].length);
+        fileData.filename = currentDiffData[i][0].slice(currentDiffData[i][0].indexOf(' b/')+3, currentDiffData[i][0].length);
 
         if(currentDiffData[i][1].indexOf('deleted file mode') > -1) {
             fileData.status = "Deleted";
@@ -122,7 +122,7 @@ function parseContent(content) {
                 isDataLine = false;
             }
 
-            if (!isHeader && !isDataLine && record) {
+            if (!isHeader && !isDataLine && record && currentDiffData[i][j].indexOf('No newline at end of file') < 0) {
                 changesCode += currentDiffData[i][j] + '\n';
             }
 
