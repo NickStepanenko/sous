@@ -73,17 +73,37 @@ function findCommitNumbers(text) {
 }
 
 function parseContent(content) {
-    var data = content.split('\n');
-    console.log(data);
+    var currentDiffData = content.split('diff --git ');
+
+    for(i=0; i<currentDiffData.length; i++) {
+        currentDiffData[i] = currentDiffData[i].split('\n');
+    }
+
+    console.log(currentDiffData);
+
+    /*for(i=0; i<currentDiffData.length; i++) {
+        if(currentDiffData[i].indexOf('diff') == 0) {
+            var filename = currentDiffData[i].slice(
+                currentDiffData[i].indexOf('b/')+2, currentDiffData[i].length
+            );
+            for(j=i; j<currentDiffData.length; j++) {
+                if(currentDiffData[j].indexOf('@@') == 0) {
+                    var entryLine = currentDiffData[j].slice(2, currentDiffData[j].indexOf(' @@')).trim();
+                    console.log("21e2e12e21e21" + entryLine);
+                }
+            }
+        }
+    }*/
 }
 
 
 
-fs.exists(__dirname + '/.git', function (exists) {
+fs.exists(process.cwd() + '/.git', function (exists) {
     if(exists) {
         async.waterfall([
             function getCommitsInfo(callback) {
-                cp.exec('git log', {cwd: __dirname}, function(error, stdout, stderr) {
+                cp.exec('git log', function(error, stdout, stderr) {
+                    //console.log(cp.cwd());
                     var listOfCommits = [];
                     var authors = findData(stdout, "Author:");
                     var dates = findData(stdout, "Date:");
@@ -114,19 +134,33 @@ fs.exists(__dirname + '/.git', function (exists) {
             function getCommitsContent(commits, callback) {
                 var commitsData = commits;
 
-                for(i=1; i<commitsData.length; i++) {
-                    commitsData[i].content =
+                //for(i=1; i<commitsData.length; i++) {
+                for(i=13; i<14; i++) {
+                    commitsData[i].content = parseContent(
                         cp.execSync(
-                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, {cwd: __dirname}
-                        ).toString('utf8');
-                    fs.writeFileSync("latestdiff.json", cp.execSync(
+                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
+                        ).toString('utf8')
+                    );
+
+                    /*for(i=0; i< currentDiffData.length; i++) {
+                        currentDiffData = currentDiffData[i].split('\n');
+                    }*/
+
+                    //fs.writeFileSync("latestdiff.json", currentDiffData);
+
+                    /*commitsData[i].content =
+                        cp.execSync(
+                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
+                        ).toString('utf8');*/
+
+                    /*fs.writeFileSync("latestdiff.json", cp.execSync(
                         'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit, {cwd: __dirname}
-                    ).toString('utf8'));
+                    ).toString('utf8'));*/
                 }
 
-                parseContent(cp.execSync(
+                /*parseContent(cp.execSync(
                     'git diff' + ' ' + commitsData[commitsData.length-2].commit + ' ' + commitsData[commitsData.length-1].commit, {cwd: __dirname}
-                ).toString('utf8'));
+                ).toString('utf8'));*/
 
                 callback(null, commitsData);
             }
@@ -140,9 +174,11 @@ fs.exists(__dirname + '/.git', function (exists) {
             jsonHeader = "{ \"name\": \"Commits Data\", \"commits\": [";
             jsonFooter = "] }";
 
-            fs.writeFileSync("patches.json", jsonHeader + data + jsonFooter);
+            fs.writeFileSync(process.cwd() + "/patches.json", jsonHeader + data + jsonFooter);
 
             //console.log(nextState("1e947f613e976945de85ae35ed923aa470f0be72", "Next"));
         });
+    } else {
+        console.error("Directory .git did not found at " + process.cwd());
     }
 });
