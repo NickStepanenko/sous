@@ -1,6 +1,6 @@
 {
   "name": "sous",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Sous project",
   "main": "sous.js",
   "dependencies": {
@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "sous": "./sous.js"
+    "sous init": "./bin/execute.js"
   },
   "bugs": {
     "url" : "https://github.com/NickStepanenko/sous/issues"
