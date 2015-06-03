@@ -64,8 +64,8 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                 data[i] = JSON.stringify(result[i]);
             }
 
-            jsonHeader = "{ \"name\": \"Commits Data\", \"commits\": [";
-            jsonFooter = "] }";
+            jsonHeader = "var jsonObject = { \"name\": \"Commits Data\", \"commits\": [";
+            jsonFooter = "] };";
 
             fs.writeFileSync(process.cwd() + "/patches.json", jsonHeader + data + jsonFooter);
         });
