@@ -13,12 +13,18 @@
     <script>
         var currentState = 1;
 
+        var data = JSON.parse(JSON.stringify(jsonObject));
+        var percentagePart = 100/(data.commits.length-1);
+        var currentPercentage = percentagePart;
+
         function applyCommitForward() {
             $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
                     data.commits[currentState+1].comment
                     + "\</li\>"
             );
-
+            currentPercentage += percentagePart;
+            $("#progressBar").css("width", currentPercentage + "%");
+            console.log($("#progressBar").width());
             currentState++;
 
             if(currentState == data.commits.length - 1) {
@@ -31,6 +37,8 @@
         function applyCommitBack() {
             $("li[id=comment" + currentState + "]").remove();
 
+            currentPercentage -= percentagePart;
+            $("#progressBar").css("width", currentPercentage + "%");
             currentState--;
 
             if(currentState == 1) {
@@ -48,46 +56,42 @@
             }
         }
 
-        var data = JSON.parse(JSON.stringify(jsonObject));
-        console.log(data);
-
         (function ($) {$(document).ready(function() {
             $("#header-name").append(data.commits[0].comment);
-
-            for(i=1; i<data.commits.length; i++) {
-                $("#listOfSlides").append("\<li\>\<a href=\"#\"\>Слайд " + i + "\</a\>\</li\>");
-            }
+            $("#progressBar").css("width", currentPercentage + "%");
 
             var files = data.commits[1].content;
 
-            for(i=0; i<files.length; i++) {
-                if(i==0) {
-                    $("#filesSwitcher").append(
-                            "\<li class=\"active\"\>\<a data-toggle=\"tab\" href=\"#file" + i + "\"\>" +
-                            files[i].filename
-                            + "\</a\>\</li\>"
-                    );
-                } else {
-                    $("#filesSwitcher").append(
-                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + i + "\"\>" +
-                            files[i].filename
-                            + "\</a\>\</li\>"
-                    );
-                }
+            var count = 1;
+            while(count < data.commits.length) {
+                $("#listOfSlides").append("\<li id=\"slide" + count + "\">\<a href=\"#\"\>Слайд " + count + "\</a\>\</li\>");
+                count++;
+            }
 
+            count = 0;
+            while(count<files.length) {
                 var code = "";
+                var count_j = 0;
 
-                for(j=0; j<files[i].changes.length; j++) {
-                    code += files[i].changes[j].changesCode;
+                $("#filesSwitcher").append(
+                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
+                        files[count].filename
+                        + "\</a\>\</li\>"
+                );
+
+                while(count_j < files[count].changes.length) {
+                    code += files[count].changes[count_j].changesCode;
+                    count_j++;
                 }
 
                 $("#filesContent").append(
-                        "\<div id=\"file" + i + "\" class=\"tab-pane fade in active\"\> " +
-                        "\<pre\>" +
+                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
                         code +
-                        "\</pre\> " +
-                        "\</div\>"
+                        "\</pre\>\</div\>"
                 );
+
+                count++;
             }
 
             $("#commitsWindow").append("\<li id=\"comment1\" class=\"list-group-item list-group-item-info\"\>" +
@@ -95,9 +99,7 @@
                     + "\</li\>"
             );
 
-            if(currentState == 1) {
-                $("#commitsSwitcher-prev").prop('disabled', true);
-            }
+            $("#commitsSwitcher-prev").prop('disabled', true);
 
             $('#commitsSwitcher-prev').on('click', function() {
                 if(currentState > 0) {
@@ -111,7 +113,10 @@
                 }
             });
 
-            $("")
+            $(".dropdown-menu").click(function(event) {
+                var clickedElemId = event.target.parentNode.id;
+                changeState(clickedElemId.slice(5));
+            });
         });})(jQuery);
     </script>
 </head>
@@ -124,7 +129,7 @@
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
                     <span class="sr-only">Toggle navigation</span>
                 </button>
-                <a id="header-name" class="navbar-brand" href="#"></a>
+                <a id="header-name" class="navbar-brand"></a>
             </div>
         </div>
         <!-- /.container -->
@@ -140,7 +145,6 @@
                             <button type="button" class="btn btn-default">Слайды</button>
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                                 <span class="caret"></span>
-                                <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <ul id="listOfSlides" class="dropdown-menu" role="menu"></ul>
                         </div>
@@ -153,7 +157,10 @@
             <div class="col-md-8">
                 <div class="container">
                     <ul id="filesSwitcher" class="nav nav-tabs"></ul>
-                    <div id="filesContent" class="tab-content"><!--class="tab-content"--></div>
+                    <div id="filesContent" class="tab-content">
+                        <div id="home" class="tab-pane fade in active">
+                            <h3>Нажмите на вкладку с названием файла, чтобы показать содержимое.</h3>
+                        </div>
                 </div>
             </div>
         </div>
@@ -162,9 +169,8 @@
 
     <div class="navbar-fixed-bottom row-fluid">
         <div class="navbar-inner">
-            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
-                 style="width: 85%; padding: 5px;">
-                <span class="sr-only">45% Complete</span>
+            <div id="progressBar" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
+                 style="padding: 5px;">
             </div>
         </div>
     </div>
