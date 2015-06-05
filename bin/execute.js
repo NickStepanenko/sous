@@ -10,7 +10,6 @@ var async = require('async');
 var findComments = require('../lib/findComments');
 var findCommitNumbers = require('../lib/findCommitNumbers');
 var findData = require('../lib/findData');
-var nextState = require('../lib/nextState');
 var parseContent = require('../lib/parseContent');
 
 fs.exists(process.cwd() + '/.git', function (exists) {
@@ -47,12 +46,14 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             },
             function getCommitsContent(commits, callback) {
                 var commitsData = commits;
+                var count = 1;
 
-                for(i=1; i<commitsData.length; i++) {
-                    commitsData[i].content =
-                        parseContent(cp.execSync(
-                            'git diff' + ' ' + commitsData[i-1].commit + ' ' + commitsData[i].commit
-                        ).toString('utf8'));
+                while(count < commitsData.length) {
+                    commitsData[count].content = parseContent(cp.execSync(
+                        'git diff' + ' ' + commitsData[count-1].commit + ' ' + commitsData[count].commit
+                    ).toString('utf8'));
+
+                    count++;
                 }
 
                 callback(null, commitsData);

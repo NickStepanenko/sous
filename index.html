@@ -11,57 +11,88 @@
 
     <script type="text/javascript" language="javascript" src="patches.json"></script>
     <script>
-        var n_currentState = 0;
+        var currentState = 0;
+
+        var data = JSON.parse(JSON.stringify(jsonObject));
+        console.log(data);
 
         function applyCommitForward() {
-            n_currentState++;
+            currentState++;
         }
 
         function applyCommitBack() {
-            n_currentState--;
+            currentState--;
         }
 
 	    function changeState(n_state) {
-            if(n_state > n_currentState) {
-                while(n_state > n_currentState) applyCommitForward();
+            if(n_state > currentState) {
+                while(n_state > currentState) applyCommitForward();
             } else {
-                while(n_state < n_currentState) applyCommitBack();
+                while(n_state < currentState) applyCommitBack();
             }
         }
 
-        (function ($) {$(document).ready(function(){
-            var data = JSON.stringify(jsonObject);
-            data = JSON.parse(data);
-            console.log(data);
+        (function ($) {$(document).ready(function() {
+            $("#header-name").append(data.commits[0].comment);
 
-            var files = data.commits[1].content;
-            console.log(files);
-
-            $("header-name").append(data.commits[0].comment);
-            //"\<li\>\<a href=\"#\"\>Слайд #" + i + "\</a\>\</li\>"
-            for(i=0; i<data.commits.length; i++) {
-                $("#listOfSlides").append("\<li\>\<a href=\"#\"\>Слайд #" + i + "\</a\>\</li\>");
+            for(i=1; i<data.commits.length; i++) {
+                $("#listOfSlides").append("\<li\>\<a href=\"#\"\>Слайд " + i + "\</a\>\</li\>");
             }
 
+            var files = data.commits[1].content;
+
             for(i=0; i<files.length; i++) {
-                $("#filesSwitcher").append(
-                    "\<li role=\"presentation\"\>\<a href=\"#\"\>" +
-                    data.commits[1].content[i].filename +
-                    "\</a\>\</li\>"
+                if(i==0) {
+                    $("#filesSwitcher").append(
+                            "\<li class=\"active\"\>\<a data-toggle=\"tab\" href=\"#file" + i + "\"\>" +
+                            files[i].filename
+                            + "\</a\>\</li\>"
+                    );
+                } else {
+                    $("#filesSwitcher").append(
+                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + i + "\"\>" +
+                            files[i].filename
+                            + "\</a\>\</li\>"
+                    );
+                }
+
+                var code = "";
+
+                for(j=0; j<files[i].changes.length; j++) {
+                    code += files[i].changes[j].changesCode;
+                }
+
+                $("#filesContent").append(
+                        "\<div id=\"file" + i + "\" class=\"tab-pane fade in active\"\> " +
+                        "\<pre\>" +
+                        code +
+                        "\</pre\> " +
+                        "\</div\>"
                 );
             }
 
-            for(i=1; i<data.commits.length; i++) {
-                $("#commitsWindow").append("\<li class=\"list-group-item list-group-item-info\"\>" + data.commits[i].comment + "\</li\>")
+            $("#commitsWindow").append("\<li class=\"list-group-item list-group-item-info\"\>" +
+                    data.commits[1].comment
+                    + "\</li\>"
+            );
+
+            if(currentState == 0) {
+                $("#commitsSwitcher-prev").prop('disabled', true);
             }
 
             $('#commitsSwitcher-prev').on('click', function() {
-                changeState(n_currentState - 1);
+                if(currentState > 0) {
+                    changeState(currentState - 1);
+                }
             });
 
             $('#commitsSwitcher-next').on('click', function() {
-                changeState(n_currentState + 1);
+                if(currentState < data.commits.length -1) {
+                    changeState(currentState + 1);
+                }
             });
+
+            $("")
         });})(jQuery);
     </script>
 </head>
@@ -72,9 +103,9 @@
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span id="header-name" class="sr-only">Toggle navigation</span>
+                    <span class="sr-only">Toggle navigation</span>
                 </button>
-                <a class="navbar-brand" href="#">Start Bootstrap</a>
+                <a id="header-name" class="navbar-brand" href="#"></a>
             </div>
         </div>
         <!-- /.container -->
@@ -101,7 +132,31 @@
             </div>
 
             <div class="col-md-8">
-                <div id="filesSwitcher" class="nav nav-tabs"></div>
+                <!--<div id="filesSwitcher" class="nav nav-tabs"></div> -->
+
+                <div class="container">
+                    <ul id="filesSwitcher" class="nav nav-tabs">
+                    </ul>
+
+                    <div id="filesContent" class="tab-content">
+                        <!-- <div id="home" class="tab-pane fade in active">
+                            <h3>HOME</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        </div>
+                        <div id="menu1" class="tab-pane fade">
+                            <h3>Menu 1</h3>
+                            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        </div>
+                        <div id="menu2" class="tab-pane fade">
+                            <h3>Menu 2</h3>
+                            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+                        </div>
+                        <div id="menu3" class="tab-pane fade">
+                            <h3>Menu 3</h3>
+                            <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                        </div> -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -110,7 +165,7 @@
     <div class="navbar-fixed-bottom row-fluid">
         <div class="navbar-inner">
             <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
-                 style="width: 85%; padding: 2px;">
+                 style="width: 85%; padding: 5px;">
                 <span class="sr-only">45% Complete</span>
             </div>
         </div>
