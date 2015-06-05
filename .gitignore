@@ -1,11 +1,7 @@
 .idea
-bin
-lib
 .gitignore
 bower_components
 node_modules
 index.html
-latestdiff.json
 package.json
-patches.json
 README.md

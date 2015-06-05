@@ -11,26 +11,45 @@
 
     <script type="text/javascript" language="javascript" src="patches.json"></script>
     <script>
-        var currentState = 0;
-
-        var data = JSON.parse(JSON.stringify(jsonObject));
-        console.log(data);
+        var currentState = 1;
 
         function applyCommitForward() {
+            $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
+                    data.commits[currentState+1].comment
+                    + "\</li\>"
+            );
+
             currentState++;
+
+            if(currentState == data.commits.length - 1) {
+                $("#commitsSwitcher-next").prop('disabled', true);
+            }
+
+            $("#commitsSwitcher-prev").prop('disabled', false);
         }
 
         function applyCommitBack() {
+            $("li[id=comment" + currentState + "]").remove();
+
             currentState--;
+
+            if(currentState == 1) {
+                $("#commitsSwitcher-prev").prop('disabled', true);
+            }
+
+            $("#commitsSwitcher-next").prop('disabled', false);
         }
 
-	    function changeState(n_state) {
+        function changeState(n_state) {
             if(n_state > currentState) {
                 while(n_state > currentState) applyCommitForward();
             } else {
                 while(n_state < currentState) applyCommitBack();
             }
         }
+
+        var data = JSON.parse(JSON.stringify(jsonObject));
+        console.log(data);
 
         (function ($) {$(document).ready(function() {
             $("#header-name").append(data.commits[0].comment);
@@ -71,12 +90,12 @@
                 );
             }
 
-            $("#commitsWindow").append("\<li class=\"list-group-item list-group-item-info\"\>" +
+            $("#commitsWindow").append("\<li id=\"comment1\" class=\"list-group-item list-group-item-info\"\>" +
                     data.commits[1].comment
                     + "\</li\>"
             );
 
-            if(currentState == 0) {
+            if(currentState == 1) {
                 $("#commitsSwitcher-prev").prop('disabled', true);
             }
 
@@ -86,8 +105,8 @@
                 }
             });
 
-            $('#commitsSwitcher-next').on('click', function() {
-                if(currentState < data.commits.length -1) {
+            $("#commitsSwitcher-next").on('click', function() {
+                if(!$("#commitsSwitcher-next").prop('disabled')) {
                     changeState(currentState + 1);
                 }
             });
@@ -128,34 +147,13 @@
                         <button id="commitsSwitcher-next" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></button>
                     </div>
                 </div>
-                    <ul id="commitsWindow" class="list-group"></ul>
+                <ul id="commitsWindow" class="list-group"></ul>
             </div>
 
             <div class="col-md-8">
-                <!--<div id="filesSwitcher" class="nav nav-tabs"></div> -->
-
                 <div class="container">
-                    <ul id="filesSwitcher" class="nav nav-tabs">
-                    </ul>
-
-                    <div id="filesContent" class="tab-content">
-                        <!-- <div id="home" class="tab-pane fade in active">
-                            <h3>HOME</h3>
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        </div>
-                        <div id="menu1" class="tab-pane fade">
-                            <h3>Menu 1</h3>
-                            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                        </div>
-                        <div id="menu2" class="tab-pane fade">
-                            <h3>Menu 2</h3>
-                            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
-                        </div>
-                        <div id="menu3" class="tab-pane fade">
-                            <h3>Menu 3</h3>
-                            <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-                        </div> -->
-                    </div>
+                    <ul id="filesSwitcher" class="nav nav-tabs"></ul>
+                    <div id="filesContent" class="tab-content"><!--class="tab-content"--></div>
                 </div>
             </div>
         </div>
