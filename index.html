@@ -4,41 +4,65 @@
     <meta charset="UTF-8">
     <title></title>
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link href="bower_components/bootstrap/dist/css/shop-item.css" rel="stylesheet">
 
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+    <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
     <script type="text/javascript" language="javascript" src="patches.json"></script>
     <script>
-        (function ($) {
-            $(document).ready(function(){
-                var data = JSON.stringify(jsonObject);
-                data = JSON.parse(data);
+        var n_currentState = 0;
 
-                var files = data.commits[1].content;
-                console.log(files);
+        function applyCommitForward() {
+            n_currentState++;
+        }
 
-                $("header-name").append(data.commits[0].comment);
-                //"\<li\>\<a href=\"#\"\>Слайд #" + i + "\</a\>\</li\>"
-                for(i=0; i<data.commits.length; i++) {
-                    $("#listOfSlides-menu").append("\<li\>Слайд #" + i + "\</li\>");
-                }
-                $("#codeWindow").append("\<pre\>" + files + "\<pre\>");
+        function applyCommitBack() {
+            n_currentState--;
+        }
 
-                for(i=0; i<files.length; i++) {
-                    $("#filesButtons").append(
-                        "\<button type=\"button\" class=\"btn btn-default\"\>\<span aria-hidden=\"true\"\>" +
-                        data.commits[1].content[i].filename +
-                        "\</span\>\</button\>"
-                    );
-                }
+	    function changeState(n_state) {
+            if(n_state > n_currentState) {
+                while(n_state > n_currentState) applyCommitForward();
+            } else {
+                while(n_state < n_currentState) applyCommitBack();
+            }
+        }
 
-                for(i=1; i<data.commits.length; i++) {
-                    $("#commentsWindow").append(i + "\. \<span\>" + data.commits[i].comment + "\</span\>")
-                }
+        (function ($) {$(document).ready(function(){
+            var data = JSON.stringify(jsonObject);
+            data = JSON.parse(data);
+            console.log(data);
 
+            var files = data.commits[1].content;
+            console.log(files);
+
+            $("header-name").append(data.commits[0].comment);
+            //"\<li\>\<a href=\"#\"\>Слайд #" + i + "\</a\>\</li\>"
+            for(i=0; i<data.commits.length; i++) {
+                $("#listOfSlides").append("\<li\>\<a href=\"#\"\>Слайд #" + i + "\</a\>\</li\>");
+            }
+
+            for(i=0; i<files.length; i++) {
+                $("#filesSwitcher").append(
+                    "\<li role=\"presentation\"\>\<a href=\"#\"\>" +
+                    data.commits[1].content[i].filename +
+                    "\</a\>\</li\>"
+                );
+            }
+
+            for(i=1; i<data.commits.length; i++) {
+                $("#commitsWindow").append("\<li class=\"list-group-item list-group-item-info\"\>" + data.commits[i].comment + "\</li\>")
+            }
+
+            $('#commitsSwitcher-prev').on('click', function() {
+                changeState(n_currentState - 1);
             });
-        })(jQuery);
+
+            $('#commitsSwitcher-next').on('click', function() {
+                changeState(n_currentState + 1);
+            });
+        });})(jQuery);
     </script>
 </head>
 <body>
@@ -56,44 +80,40 @@
         <!-- /.container -->
     </nav>
 
-    <div id="content">
-        <section id="slides-comments"
-                 style="display: block; height: 80%; width: 33%; padding: 10px; min-height: 650px;
-                 border: inset; border-radius: 5px; margin-left: 2%; float: left;">
-            <div>
-                <div id="filesSwitcher" style="float: inherit; padding-bottom: 10%;">
+    <div id="content" class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div id="commitsSwitcher" style="padding-bottom: 10px">
                     <div class="btn-group" role="group" aria-label="..." align="left" style="position: relative">
-                        <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span></button>
+                        <button id="commitsSwitcher-prev" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span></button>
                         <div class="btn-group">
-                            <button id="listOfSlides-name" type="button" class="btn btn-default">Слайды</button>
+                            <button type="button" class="btn btn-default">Слайды</button>
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
-                            <ul id="listOfSlides-menu" class="dropdown-menu" role="menu">
-                            </ul>
+                            <ul id="listOfSlides" class="dropdown-menu" role="menu"></ul>
                         </div>
-                        <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></button>
+                        <button id="commitsSwitcher-next" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></button>
                     </div>
                 </div>
+                    <ul id="commitsWindow" class="list-group"></ul>
             </div>
 
-            <div id="commentsWindow" style="border: inset; border-radius: 5px;"></div>
-        </section>
-
-        <section id="files-code"
-                 style="display: block; height: 80%; width: 63%; padding: 10px;
-                 border: inset; border-radius: 5px; margin-right: 2%; float: right;">
-            <div id="filesButtons" style="float: left; padding-bottom: 10%;"></div>
-        </section>
-
-        <div class="navbar-fixed-bottom row-fluid">
-            <div class="navbar-inner">
-                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
-                     style="width: 85%; padding: 10px;">
-                    <span class="sr-only">45% Complete</span>
-                </div>
+            <div class="col-md-8">
+                <div id="filesSwitcher" class="nav nav-tabs"></div>
             </div>
         </div>
+    </div>
+
+
+    <div class="navbar-fixed-bottom row-fluid">
+        <div class="navbar-inner">
+            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
+                 style="width: 85%; padding: 2px;">
+                <span class="sr-only">45% Complete</span>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
