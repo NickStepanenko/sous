@@ -24,7 +24,6 @@
             );
             currentPercentage += percentagePart;
             $("#progressBar").css("width", currentPercentage + "%");
-            console.log($("#progressBar").width());
             currentState++;
 
             if(currentState == data.commits.length - 1) {
