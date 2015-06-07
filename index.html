@@ -27,6 +27,10 @@
         footer {
             margin: 50px 0;
         }
+        #editor {
+             /** Setting height is also important, otherwise editor wont showup**/
+             height: 300px;
+         }
     </style>
 
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
@@ -203,108 +207,82 @@
                     }
                 }
             }
-
             return finalCode;
         }
     </script>
 
     <script>
         var currentState = 1;
-
         var data = JSON.parse(JSON.stringify(jsonObject));
         var percentagePart = 100/(data.commits.length-1);
         var currentPercentage = percentagePart;
-
         var filesData = modifyData(getFiles(data));
-        console.log(filesData);
 
+        function applyCommit(direction) {
+            if(direction=="forward") {
+                $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
+                        data.commits[currentState+1].comment
+                        + "\</li\>"
+                );
 
-        function applyCommitForward() {
-            $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
-                    data.commits[currentState+1].comment
-                    + "\</li\>"
-            );
-            currentPercentage += percentagePart;
-            $("#progressBar").css("width", currentPercentage + "%");
+                currentPercentage += percentagePart;
+                $("#progressBar").css("width", currentPercentage + "%");
 
+                currentState++;
+
+                if(currentState == data.commits.length - 1) {
+                    $("#commitsSwitcher-next").prop('disabled', true);
+                }
+                $("#commitsSwitcher-prev").prop('disabled', false);
+            } else
+            if(direction=="back") {
+                $("li[id=comment" + currentState + "]").remove();
+
+                currentPercentage -= percentagePart;
+                $("#progressBar").css("width", currentPercentage + "%");
+
+                currentState--;
+
+                if(currentState == 1) {
+                    $("#commitsSwitcher-prev").prop('disabled', true);
+                }
+                $("#commitsSwitcher-next").prop('disabled', false);
+            }
+
+            $("#currentSlide").empty();
             $("#filesSwitcher").empty();
             $("#filesContent").empty();
 
-            currentState++;
-
+            $("#currentSlide").append(currentState);
             var files = filesData[currentState-1];
-            console.log(files);
+
             var count = 0;
-
             while(count<files.length) {
-                $("#filesSwitcher").append(
-                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
-                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
-                        files[count].filename
-                        + "\</a\>\</li\>"
-                );
+                if(files[count].status != "Deleted") {
+                    $("#filesSwitcher").append(
+                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                            "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
+                            files[count].filename
+                            + "\</a\>\</li\>"
+                    );
 
-                $("#filesContent").append(
-                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
-                        files[count].code +
-                        "\</pre\>\</div\>"
-                );
-
+                    $("#filesContent").append(
+                            "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                            files[count].code +
+                            "\</pre\>\</div\>"
+                    );
+                }
                 count++;
             }
 
-            if(currentState == data.commits.length - 1) {
-                $("#commitsSwitcher-next").prop('disabled', true);
-            }
-
-            $("#commitsSwitcher-prev").prop('disabled', false);
+            $('.nav-tabs a[href="#file' + 0 + '"]').tab('show');
         }
-
-
-        function applyCommitBack() {
-            $("li[id=comment" + currentState + "]").remove();
-
-            currentPercentage -= percentagePart;
-            $("#progressBar").css("width", currentPercentage + "%");
-
-            $("#filesSwitcher").empty();
-            $("#filesContent").empty();
-
-            currentState--;
-
-            var files = filesData[currentState-1];
-            var count = 0;
-
-            while(count<files.length) {
-                $("#filesSwitcher").append(
-                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
-                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
-                        files[count].filename
-                        + "\</a\>\</li\>"
-                );
-
-                $("#filesContent").append(
-                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
-                        files[count].code +
-                        "\</pre\>\</div\>"
-                );
-
-                count++;
-            }
-
-            if(currentState == 1) {
-                $("#commitsSwitcher-prev").prop('disabled', true);
-            }
-
-            $("#commitsSwitcher-next").prop('disabled', false);
-        }
-
 
         function changeState(n_state) {
             if(n_state > currentState) {
-                while(n_state > currentState) applyCommitForward();
+                while(n_state > currentState) applyCommit("forward");
             } else {
-                while(n_state < currentState) applyCommitBack();
+                while(n_state < currentState) applyCommit("back");
             }
         }
 
@@ -314,6 +292,10 @@
             $(document).prop('title', data.commits[0].comment);
 
             $("#progressBar").css("width", currentPercentage + "%");
+
+            var editor = ace.edit("filesContent");
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/javascript");
 
             var files = filesData[0];
 
@@ -325,21 +307,24 @@
 
             count = 0;
             while(count<files.length) {
-                $("#filesSwitcher").append(
-                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
-                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
-                        files[count].filename
-                        + "\</a\>\</li\>"
-                );
+                if(files[count].status != "Deleted") {
+                    $("#filesSwitcher").append(
+                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                            "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
+                            files[count].filename
+                            + "\</a\>\</li\>"
+                    );
 
-                $("#filesContent").append(
-                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
-                        files[count].code +
-                        "\</pre\>\</div\>"
-                );
-
+                    $("#filesContent").append(
+                            "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                            files[count].code +
+                            "\</pre\>\</div\>"
+                    );
+                }
                 count++;
             }
+
+            $('.nav-tabs a[href="#file' + 0 + '"]').tab('show');
 
             $("#commitsWindow").append("\<li id=\"comment1\" class=\"list-group-item list-group-item-info\"\>" +
                     data.commits[1].comment
@@ -353,6 +338,8 @@
                     changeState(currentState - 1);
                 }
             });
+
+            $("#currentSlide").append(currentState);
 
             $("#commitsSwitcher-next").on('click', function() {
                 if(!$("#commitsSwitcher-next").prop('disabled')) {
@@ -389,7 +376,9 @@
                     <div class="btn-group" role="group" aria-label="..." align="left" style="position: relative">
                         <button id="commitsSwitcher-prev" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span></button>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-default">Слайды</button>
+                            <button type="button" class="btn btn-default">
+                                Слайды <button id="currentSlide" type="button" class="btn btn-default"></button>
+                            </button>
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                                 <span class="caret"></span>
                             </button>
@@ -404,9 +393,7 @@
             <div class="col-md-8">
                     <ul id="filesSwitcher" class="nav nav-tabs"></ul>
                     <div id="filesContent" class="tab-content">
-                        <div id="home" class="tab-pane fade in active">
-                            <h3>Нажмите на вкладку с названием файла, чтобы показать содержимое.</h3>
-                        </div>
+                        <div id="home" class="tab-pane fade in active"></div>
                     </div>
             </div>
         </div>
