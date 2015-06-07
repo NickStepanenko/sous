@@ -4,18 +4,220 @@
     <meta charset="UTF-8">
     <title></title>
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="bower_components/bootstrap/dist/css/shop-item.css" rel="stylesheet">
+
+    <style>
+        body {
+            padding-top: 70px; /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+        }
+        .thumbnail img {
+            width: 100%;
+        }
+        .ratings {
+            padding-right: 10px;
+            padding-left: 10px;
+            color: #d17581;
+        }
+        .thumbnail {
+            padding: 0;
+        }
+        .thumbnail .caption-full {
+            padding: 9px;
+            color: #333;
+        }
+        footer {
+            margin: 50px 0;
+        }
+    </style>
 
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
     <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
     <script type="text/javascript" language="javascript" src="patches.json"></script>
     <script>
+        function getFiles() {
+            var filesData = data.commits;
+            var commits = [];
+            var filesAndCodes = [];
+            var file = {};
+
+            for(i=1; i<filesData.length; i++) {
+                for(j=0; j<filesData[i].content.length; j++) {
+                    file.filename = filesData[i].content[j].filename;
+                    file.status   = filesData[i].content[j].status;
+                    file.changes  = filesData[i].content[j].changes;
+
+                    filesAndCodes.push(file);
+                    file = {};
+                }
+                commits.push(filesAndCodes);
+                filesAndCodes = [];
+            }
+            return commits;
+        }
+
+        function unmarkLines(code) {
+            var lines = code.split('\n');
+            newCode = "";
+
+            for(i=0; i<lines.length; i++) {
+                lines[i] = " " + lines[i].slice(1);
+                newCode += lines[i] + "\n";
+            }
+
+            return newCode;
+        }
+
+        function modifyData(data) {
+            var filesData = data;
+            var currentStage = [];
+            var commitStages = [];
+            var count_i = 0;
+
+            while(count_i < filesData.length) {
+                if(count_i == 0) {
+                    var j = 0;
+                    for(j=0; j<filesData[count_i].length; j++) {
+                        filesData[count_i][j].code = getCode(filesData[count_i][j].changes);
+                        filesData[count_i][j].code = unmarkLines(filesData[count_i][j].code);
+                        currentStage.push(filesData[count_i][j]);
+                    }
+                    j=0;
+
+                    commitStages.push(currentStage);
+                    currentStage = [];
+                }
+                else {
+                    for(q=0; q<commitStages[count_i-1].length; q++) {
+                        currentStage.push(commitStages[count_i-1][q]);
+                    }
+
+                    var m = 0;
+                    for(m=0; m<currentStage.length; m++) {
+                        var defObj = {};
+                        defObj.filename = currentStage[m].filename;
+                        defObj.changes = currentStage[m].changes;
+                        defObj.status = currentStage[m].status;
+
+                        if(currentStage[m].status != "Deleted") {
+                            defObj.status = "Default";
+                            defObj.code = unmarkLines(currentStage[m].code);
+                        }
+
+                        currentStage[m] = defObj;
+                    }
+                    m = 0;
+
+                    var l = 0;
+                    for(l=0; l<filesData[count_i].length; l++) {
+                        if(filesData[count_i][l].status == "Modified") {
+                            var newObj = {};
+                            var matchIndex = 0;
+                            newObj.filename = filesData[count_i][l].filename;
+                            newObj.changes = filesData[count_i][l].changes;
+                            newObj.status = filesData[count_i][l].status;
+
+                            var k = 0;
+                            for(k=0; k<currentStage.length; k++) {
+                                if(currentStage[k].filename == filesData[count_i][l].filename) {
+                                    matchIndex = k;
+                                    newObj.code =
+                                            applyPatch(currentStage[k].code, filesData[count_i][l].changes);
+                                    break;
+                                }
+                            }
+                            k = 0;
+                            currentStage[matchIndex] = newObj;
+                        }
+
+                        else
+                        if(filesData[count_i][l].status == "Created") {
+                            filesData[count_i][l].code = getCode(filesData[count_i][l].changes);
+                            currentStage.push(filesData[count_i][l]);
+                        }
+
+                        else
+                        if(filesData[count_i][l].status == "Deleted") {
+                            var deletedObj = {};
+                            var deletedMatchIndex = 0;
+                            deletedObj.filename = filesData[count_i][l].filename;
+                            deletedObj.changes = filesData[count_i][l].changes;
+                            deletedObj.status = filesData[count_i][l].status;
+
+                            var p = 0;
+                            for(p=0; p<currentStage.length; p++) {
+                                if(currentStage[p].filename == filesData[count_i][l].filename) {
+                                    deletedMatchIndex = p;
+                                    deletedObj.status = "Deleted";
+                                    break;
+                                }
+                            }
+                            p = 0;
+                            currentStage[deletedMatchIndex] = deletedObj;
+                        }
+                    }
+                    l = 0;
+                    commitStages.push(currentStage);
+                }
+                currentStage = [];
+                count_i++;
+            }
+
+            return commitStages;
+        }
+
+        function getCode(changes) {
+            var code = "";
+            code += changes[0].changesCode;
+            return code;
+        }
+
+        function applyPatch(code, patches) {
+            var finalCode = "";
+            var codeArray = [];
+            code = code.split('\n');
+
+            for(i=0; i<patches.length; i++) {
+                var part1 = [];
+                var part2 = [];
+                var count_j = 0;
+                var count_k = (patches[i].changesCode.split('\n')).length;
+
+                while(count_j < patches[i].changesStartLine-1) {
+                    part1.push(code[count_j]);
+                    count_j++;
+                }
+
+                codeArray.push(part1);
+
+                while(count_k < code.length) {
+                    part1.push(code[k]);
+                    count_k++;
+                }
+
+                codeArray.push(patches[i].changesCode.split('\n'));
+                codeArray.push(part2);
+
+                for(j=0; j<codeArray.length; j++) {
+                    for(k=0; k<codeArray[j].length; k++) {
+                        finalCode += codeArray[j][k] + "\n";
+                    }
+                }
+            }
+
+            return finalCode;
+        }
+    </script>
+
+    <script>
         var currentState = 1;
 
         var data = JSON.parse(JSON.stringify(jsonObject));
         var percentagePart = 100/(data.commits.length-1);
         var currentPercentage = percentagePart;
+
+        var filesData = modifyData(getFiles(data));
+        console.log(filesData);
+
 
         function applyCommitForward() {
             $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
@@ -24,7 +226,32 @@
             );
             currentPercentage += percentagePart;
             $("#progressBar").css("width", currentPercentage + "%");
+
+            $("#filesSwitcher").empty();
+            $("#filesContent").empty();
+
             currentState++;
+
+            var files = filesData[currentState-1];
+            console.log(files);
+            var count = 0;
+
+            while(count<files.length) {
+                $("#filesSwitcher").append(
+                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
+                        files[count].filename
+                        + "\</a\>\</li\>"
+                );
+
+                $("#filesContent").append(
+                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                        files[count].code +
+                        "\</pre\>\</div\>"
+                );
+
+                count++;
+            }
 
             if(currentState == data.commits.length - 1) {
                 $("#commitsSwitcher-next").prop('disabled', true);
@@ -33,12 +260,37 @@
             $("#commitsSwitcher-prev").prop('disabled', false);
         }
 
+
         function applyCommitBack() {
             $("li[id=comment" + currentState + "]").remove();
 
             currentPercentage -= percentagePart;
             $("#progressBar").css("width", currentPercentage + "%");
+
+            $("#filesSwitcher").empty();
+            $("#filesContent").empty();
+
             currentState--;
+
+            var files = filesData[currentState-1];
+            var count = 0;
+
+            while(count<files.length) {
+                $("#filesSwitcher").append(
+                        "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                        "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
+                        files[count].filename
+                        + "\</a\>\</li\>"
+                );
+
+                $("#filesContent").append(
+                        "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                        files[count].code +
+                        "\</pre\>\</div\>"
+                );
+
+                count++;
+            }
 
             if(currentState == 1) {
                 $("#commitsSwitcher-prev").prop('disabled', true);
@@ -46,6 +298,7 @@
 
             $("#commitsSwitcher-next").prop('disabled', false);
         }
+
 
         function changeState(n_state) {
             if(n_state > currentState) {
@@ -55,11 +308,14 @@
             }
         }
 
+
         (function ($) {$(document).ready(function() {
             $("#header-name").append(data.commits[0].comment);
+            $(document).prop('title', data.commits[0].comment);
+
             $("#progressBar").css("width", currentPercentage + "%");
 
-            var files = data.commits[1].content;
+            var files = filesData[0];
 
             var count = 1;
             while(count < data.commits.length) {
@@ -69,9 +325,6 @@
 
             count = 0;
             while(count<files.length) {
-                var code = "";
-                var count_j = 0;
-
                 $("#filesSwitcher").append(
                         "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
                         "\<span class=\"glyphicon glyphicon-file\" aria-hidden=\"true\"\>\</span\> " +
@@ -79,14 +332,9 @@
                         + "\</a\>\</li\>"
                 );
 
-                while(count_j < files[count].changes.length) {
-                    code += files[count].changes[count_j].changesCode;
-                    count_j++;
-                }
-
                 $("#filesContent").append(
                         "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
-                        code +
+                        files[count].code +
                         "\</pre\>\</div\>"
                 );
 
@@ -154,13 +402,12 @@
             </div>
 
             <div class="col-md-8">
-                <div class="container">
                     <ul id="filesSwitcher" class="nav nav-tabs"></ul>
                     <div id="filesContent" class="tab-content">
                         <div id="home" class="tab-pane fade in active">
                             <h3>Нажмите на вкладку с названием файла, чтобы показать содержимое.</h3>
                         </div>
-                </div>
+                    </div>
             </div>
         </div>
     </div>
