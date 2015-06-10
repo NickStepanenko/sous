@@ -65,10 +65,13 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                 data[i] = JSON.stringify(result[i]);
             }
 
-            jsonHeader = "var jsonObject = { \"name\": \"Commits Data\", \"commits\": [";
-            jsonFooter = "] };";
+            var dataObject = "var data = { \"name\": \"Commits Data\", \"commits\": [" + data + "] };";
 
-            fs.writeFileSync(process.cwd() + "/patches.json", jsonHeader + data + jsonFooter);
+            fs.readFile(__dirname + '/indexHeader.html', function (err, data1) {
+                fs.readFile(__dirname + '/indexFooter.html', function (err, data2) {
+                    fs.writeFileSync(process.cwd() + "/index.html", data1.toString() + dataObject + data2.toString());
+                });
+            });
         });
     } else {
         console.error("Directory .git did not found at " + process.cwd());

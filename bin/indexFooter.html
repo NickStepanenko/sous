@@ -1,0 +1,204 @@
+
+        var percentagePart = 100/(data.commits.length-1);
+        var currentPercentage = percentagePart;
+        var filesData = modifyData(getFiles(data));
+
+        function applyCommit(direction) {
+            if(direction=="forward") {
+                $("#commitsWindow").append("\<li id=\"comment" + (currentState + 1) + "\" class=\"list-group-item list-group-item-info\"\>" +
+                        data.commits[currentState+1].comment
+                        + "\</li\>"
+                );
+
+                currentPercentage += percentagePart;
+                $("#progressBar").css("width", currentPercentage + "%");
+
+                currentState++;
+
+                if(currentState == data.commits.length - 1) {
+                    $("#commitsSwitcher-next").prop('disabled', true);
+                }
+                $("#commitsSwitcher-prev").prop('disabled', false);
+            } else
+            if(direction=="back") {
+                $("li[id=comment" + currentState + "]").remove();
+
+                currentPercentage -= percentagePart;
+                $("#progressBar").css("width", currentPercentage + "%");
+
+                currentState--;
+
+                if(currentState == 1) {
+                    $("#commitsSwitcher-prev").prop('disabled', true);
+                }
+                $("#commitsSwitcher-next").prop('disabled', false);
+            }
+
+            $("#currentSlide").empty();
+            $("#filesSwitcher").empty();
+            $("#filesContent").empty();
+
+            $("#currentSlide").append(currentState);
+            var files = filesData[currentState-1];
+
+            var count = 0;
+            while(count<files.length) {
+                if(files[count].status != "Deleted") {
+                    $("#filesSwitcher").append(
+                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                            "\<img width=\"10\" height=\"12\" title=\"\" alt=\"\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAYCAYAAAAYl8YPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGVJREFUeNpiYGBg+ADE/4nFQACkGBaAaHTMQIpBSIb9x2YgJYZhGEipYSgGUsMwuIEsDOSBj0DMj8SPZ2RkJN0woCYDoCsEsMpBnUkVwMRARTBq2Khho4aNGka6YR+pZNZHgAADAJO9jDwxce+IAAAAAElFTkSuQmCC\" /> " +
+                            files[count].filename
+                            + "\</a\>\</li\>"
+                    );
+
+                    $("#filesContent").append(
+                            "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                            files[count].code +
+                            "\</pre\>\</div\>"
+                    );
+                }
+                count++;
+            }
+
+            $('.nav-tabs a[href="#file' + 0 + '"]').tab('show');
+        }
+
+        function changeState(n_state) {
+            if(n_state > currentState) {
+                while(n_state > currentState) applyCommit("forward");
+            } else {
+                while(n_state < currentState) applyCommit("back");
+            }
+        }
+
+        function setEditorWindow(fileid) {
+            editor = ace.edit(fileid);
+        }
+
+        (function ($) {$(document).ready(function() {
+            $("#header-name").append(data.commits[0].comment);
+            $(document).prop('title', data.commits[0].comment);
+
+            $("#progressBar").css("width", currentPercentage + "%");
+
+            var files = filesData[0];
+
+            var count = 1;
+            while(count < data.commits.length) {
+                $("#listOfSlides").append("\<li id=\"slide" + count + "\">\<a href=\"#\"\>Слайд " + count + "\</a\>\</li\>");
+                count++;
+            }
+
+            count = 0;
+            while(count<files.length) {
+                if(files[count].status != "Deleted") {
+                    $("#filesSwitcher").append(
+                            "\<li\>\<a data-toggle=\"tab\" href=\"#file" + count + "\"\>" +
+                            "\<img width=\"10\" height=\"12\" title=\"\" alt=\"\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAYCAYAAAAYl8YPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGVJREFUeNpiYGBg+ADE/4nFQACkGBaAaHTMQIpBSIb9x2YgJYZhGEipYSgGUsMwuIEsDOSBj0DMj8SPZ2RkJN0woCYDoCsEsMpBnUkVwMRARTBq2Khho4aNGka6YR+pZNZHgAADAJO9jDwxce+IAAAAAElFTkSuQmCC\" /> " +
+                            files[count].filename
+                            + "\</a\>\</li\>"
+                    );
+
+                    $("#filesContent").append(
+                            "\<div  id=\"file" + count + "\" class=\"tab-pane fade in active\"\>\<pre\>" +
+                            files[count].code +
+                            "\</pre\>\</div\>"
+                    );
+                }
+                count++;
+            }
+
+            $('.nav-tabs a[href="#file' + 0 + '"]').tab('show');
+
+            $("#commitsWindow").append("\<li id=\"comment1\" class=\"list-group-item list-group-item-info\"\>" +
+                    data.commits[1].comment
+                    + "\</li\>"
+            );
+
+            $("#commitsSwitcher-prev").prop('disabled', true);
+
+            $('#commitsSwitcher-prev').on('click', function() {
+                if(currentState > 0) {
+                    changeState(currentState - 1);
+                }
+            });
+
+            $("#currentSlide").append(currentState);
+
+            $("#commitsSwitcher-next").on('click', function() {
+                if(!$("#commitsSwitcher-next").prop('disabled')) {
+                    changeState(currentState + 1);
+                }
+            });
+
+            $(".dropdown-menu").click(function(event) {
+                var clickedElemId = event.target.parentNode.id;
+                changeState(clickedElemId.slice(5));
+            });
+
+            /*$("#filesSwitcher a").click(function(event) {
+             setEditorWindow(($(this).attr('href')).slice(1));
+             });*/
+        });})(jQuery);
+    </script>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+            </button>
+            <a id="header-name" class="navbar-brand"></a>
+        </div>
+    </div>
+    <!-- /.container -->
+</nav>
+
+<div id="content" class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div id="commitsSwitcher" style="padding-bottom: 10px">
+                <div class="btn-group" role="group" aria-label="..." align="left" style="position: relative">
+                    <button id="commitsSwitcher-prev" type="button" class="btn btn-primary">
+                        <img width="11" height="17" title="" style="vertical-align: text-top" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAWCAYAAAAfD8YZAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNWWFMmUAAABjSURBVDhPY2AgEvz//18AiAuIVI5QBtV4AUiDwAKiDUDTCNVPhAE4NBI2gIBGkAEXsDqfGI0gNRiaRzWCYwWUODADBxRaZAcQLKhHDaBTIOLN12RnSQLRSHZpQrxGNBegFIAAr52cA6MY3B4AAAAASUVORK5CYII=" />
+                    </button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default">
+                            Слайды <button id="currentSlide" type="button" class="btn btn-default"></button>
+                        </button>
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="listOfSlides" class="dropdown-menu" role="menu"></ul>
+                    </div>
+                    <button id="commitsSwitcher-next" type="button" class="btn btn-primary" style="align-content: center">
+                        <img width="11" height="17" title="" style="vertical-align: text-top" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAWCAYAAAAfD8YZAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNWWFMmUAAABcSURBVDhPY2BAAv///y8AYgFkMaLYQE0LgBgELpBkAJJGqH4iDcCikXgDoM6EaUCn8XsB5L9RAwYyDMiOgVGNBLIopekaVgiQlqNgRQzZhQEWA0grhpAMIKkABADZNpwD2f23YwAAAABJRU5ErkJggg==" />
+                    </button>
+                </div>
+            </div>
+            <ul id="commitsWindow" class="list-group"></ul>
+        </div>
+
+        <div class="col-md-8">
+            <ul id="filesSwitcher" class="nav nav-tabs"></ul>
+            <div id="filesContent" class="tab-content"></div>
+        </div>
+
+        <script>
+        </script>
+    </div>
+</div>
+
+
+<div class="navbar-fixed-bottom row-fluid">
+    <div class="navbar-inner">
+        <div id="progressBar" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"
+             style="padding: 5px;">
+        </div>
+    </div>
+</div>
+</body>
+</html>
