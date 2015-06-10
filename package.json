@@ -1,0 +1,27 @@
+{
+  "name": "sous",
+  "version": "0.9.0",
+  "description": "Sous project",
+  "main": "bin/execute.js",
+  "dependencies": {
+    "async": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "sous": "bin/execute.js"
+  },
+  "bugs": {
+    "url" : "https://github.com/NickStepanenko/sous/issues"
+  , "email" : "massaalonso@yandex.ru"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NickStepanenko/sous.git"
+  },
+  "author": "Nick Stepanenko <massaalonso@yandex.ru>",
+  "license": "ISC",
+  "homepage": "https://github.com/NickStepanenko/sous"
+}
