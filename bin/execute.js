@@ -9,7 +9,6 @@ var fsextra = require('node-fs-extra');
 var cp = require('child_process');
 var async = require('async');
 var mkdirp = require('mkdirp');
-var wrench = require('wrench');
 var findComments = require('../lib/findComments');
 var findCommitNumbers = require('../lib/findCommitNumbers');
 var findData = require('../lib/findData');
