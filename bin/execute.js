@@ -86,8 +86,6 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             fsextra.copy(__dirname + '/src', process.cwd() + '/sous/src', function (err) {
                 if (err) {
                     console.error(err);
-                } else {
-                    console.log("success!");
                 }
             });
 
