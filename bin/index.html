@@ -222,7 +222,7 @@
                 var part1 = [];
                 var part2 = [];
                 var count_j = 0;
-                var count_k = (patches[i].changesStartLine-1) + (patches[i].changesCode.split('\n')).length;
+                var count_k = (patches[i].changesStartLine-2) + (patches[i].changesCode.split('\n')).length-4;
 
                 while(count_j < patches[i].changesStartLine-1) {
                     part1.push(code[count_j]);
