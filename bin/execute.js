@@ -5,8 +5,11 @@
  */
 
 var fs = require('fs');
+var fsextra = require('node-fs-extra');
 var cp = require('child_process');
 var async = require('async');
+var mkdirp = require('mkdirp');
+var wrench = require('wrench');
 var findComments = require('../lib/findComments');
 var findCommitNumbers = require('../lib/findCommitNumbers');
 var findData = require('../lib/findData');
@@ -65,12 +68,33 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                 data[i] = JSON.stringify(result[i]);
             }
 
-            var dataObject = "var data = { \"name\": \"Commits Data\", \"commits\": [" + data + "] };";
+            var dataObject = "var dataObject = { \n" +
+                "\"name\": \"Commits Data\", \n" +
+                "\"commits\": [\n";
 
-            fs.readFile(__dirname + '/indexHeader.html', function (err, data1) {
-                fs.readFile(__dirname + '/indexFooter.html', function (err, data2) {
-                    fs.writeFileSync(process.cwd() + "/index.html", data1.toString() + dataObject + data2.toString());
-                });
+            for(i=0; i<data.length; i++) {
+                if(i != data.length-1) {
+                    dataObject += data[i] + ",\n";
+                } else {
+                    dataObject += data[i] + "\n";
+                }
+            }
+
+            dataObject += "] };";
+            mkdirp(process.cwd() + '/sous', function(err) {
+            });
+
+            fsextra.copy(__dirname + '/src', process.cwd() + '/sous/src', function (err) {
+                if (err) {
+                    console.error(err);
+                } else {
+                    console.log("success!");
+                }
+            });
+
+            fs.readFile(__dirname + '/index.html', function (err, data) {
+                fs.writeFileSync(process.cwd() + "/sous/sous_patches.json", dataObject);
+                fs.writeFileSync(process.cwd() + "/sous/sous_presentation.html", data.toString());
             });
         });
     } else {
