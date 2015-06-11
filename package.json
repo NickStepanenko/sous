@@ -1,6 +1,6 @@
 {
   "name": "sous",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Sous project",
   "main": "bin/execute.js",
   "dependencies": {
