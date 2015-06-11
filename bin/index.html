@@ -85,11 +85,24 @@
 
         function unmarkLines(code) {
             var lines = code.split('\n');
-            newCode = "";
+            var newCode = "";
 
             for(i=0; i<lines.length; i++) {
                 lines[i] = " " + lines[i].slice(1);
                 newCode += lines[i] + "\n";
+            }
+
+            return newCode;
+        }
+
+        function prepareCode(code) {
+            var lines = code.split('\n');
+            var newCode = "";
+
+            for(i=0; i<lines.length; i++) {
+                if(lines[i][0] != "-" && lines[i] != "") {
+                    newCode += lines[i] + "\n";
+                }
             }
 
             return newCode;
@@ -128,7 +141,8 @@
 
                         if(currentStage[m].status != "Deleted") {
                             defObj.status = "Default";
-                            defObj.code = unmarkLines(currentStage[m].code);
+                            defObj.code = prepareCode(currentStage[m].code);
+                            defObj.code = unmarkLines(defObj.code);
                         }
 
                         currentStage[m] = defObj;
@@ -208,7 +222,7 @@
                 var part1 = [];
                 var part2 = [];
                 var count_j = 0;
-                var count_k = (patches[i].changesCode.split('\n')).length;
+                var count_k = (patches[i].changesStartLine-1) + (patches[i].changesCode.split('\n')).length;
 
                 while(count_j < patches[i].changesStartLine-1) {
                     part1.push(code[count_j]);
@@ -218,7 +232,7 @@
                 codeArray.push(part1);
 
                 while(count_k < code.length) {
-                    part1.push(code[count_k]);
+                    part2.push(code[count_k]);
                     count_k++;
                 }
 
