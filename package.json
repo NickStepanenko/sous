@@ -1,12 +1,11 @@
 {
   "name": "sous",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Sous project",
   "main": "bin/execute.js",
   "dependencies": {
     "async": "*",
     "node-fs-extra": "*",
-    "mkdirp": "*"
   },
   "devDependencies": {},
   "scripts": {
