@@ -8,9 +8,8 @@ var fs = require('fs');
 var fsextra = require('node-fs-extra');
 var cp = require('child_process');
 var async = require('async');
-var mkdirp = require('mkdirp');
+
 var findComments = require('../lib/findComments');
-var findCommitNumbers = require('../lib/findCommitNumbers');
 var findData = require('../lib/findData');
 var parseContent = require('../lib/parseContent');
 
@@ -22,8 +21,8 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                     var listOfCommits = [];
                     var authors = findData(stdout, "Author:");
                     var dates = findData(stdout, "Date:");
+                    var commitNumbers = findData(stdout, "commit");
                     var comments = findComments(stdout);
-                    var commitNumbers = findCommitNumbers(stdout);
 
                     for(i=0; i<authors.length; i++) {
                         var commit = {
