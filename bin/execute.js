@@ -75,7 +75,7 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             }
 
             dataObject += "] };";
-            fs.mkdir(process.cwd() + '/sous');
+            fs.mkdir(process.cwd() + '/sous', function(err) { });
 
             fsextra.copy(__dirname + '/src', process.cwd() + '/sous/src', function (err) {
                 if (err) {

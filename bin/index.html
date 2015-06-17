@@ -31,24 +31,14 @@
              /** Setting height is also important, otherwise editor wont showup**/
              height: 300px;
          }
-        .deletedLine {
-            background: rgba(255, 50, 50, 0.4);
-            position: absolute;
-            width: 100% !important;
-            left: 0 !important;
-        }
         .addedLine {
-            background: rgba(50, 255, 50, 0.4);
-            position: absolute;
-            width: 100% !important;
-            left: 0 !important;
+            background: rgba(50, 255, 50, 0.3);
         }
-        .noselection .ace_marker-layer .ace_selection {
-            background: transparent;
+        .defaultLine {
+            background: rgba(255, 255, 255, 0.0);
         }
-
-        .noselection .ace_cursor {
-            color: transparent;
+        .deletedLine {
+            background: rgba(255, 50, 50, 0.3);
         }
         html {
             overflow-y: scroll;
@@ -255,6 +245,9 @@
         var percentagePart = 100/(data.commits.length-1);
         var currentPercentage = percentagePart;
         var filesData = modifyData(getFiles(data));
+        var editor;
+        var aceRange = ace.require('ace/range').Range;
+        var highlightedLines = [];
 
         (function ($) {$(document).ready(function() {
 
@@ -312,7 +305,6 @@
 
                 setEditorWindow(files[0]);
                 editor.renderer.setShowGutter(false);
-                editor.setReadOnly(true);
 
                 var mode = modelist.getModeForPath("project/" + files[0].filename).mode;
                 editor.session.setMode(mode);
@@ -322,7 +314,6 @@
 
                     setEditorWindow(files[fileid]);
                     editor.renderer.setShowGutter(false);
-                    editor.setReadOnly(true);
 
                     var mode = modelist.getModeForPath("project/" + files[fileid].filename).mode;
                     editor.session.setMode(mode);
@@ -340,10 +331,44 @@
             function setEditorWindow(file) {
                 editor.session.setValue(file.code, 0);
                 editor.renderer.setShowGutter(false);
-                editor.setReadOnly(true);
+
+                if(currentState > 1) {
+                    highlightLines(file);
+                }
 
                 var mode = modelist.getModeForPath("project/" + file.filename).mode;
                 editor.session.setMode(mode);
+            }
+
+            function highlightLines(file) {
+                var code = (file.code).split('\n');
+                var l;
+                var count_i = 0;
+
+                if(highlightedLines.length > 0) {
+                    while(count_i < highlightedLines.length) {
+                        editor.session.removeMarker(highlightedLines[count_i]);
+                        count_i++;
+                    }
+                    highlightedLines = [];
+                }
+                count_i = 0;
+
+                while(count_i < code.length) {
+                    if(code[count_i][0] == "+") {
+                        l = editor.session.addMarker(new aceRange(count_i, 0, count_i, 1), "addedLine", "fullLine");
+                        highlightedLines.push(l);
+                    } else
+                    if(code[count_i][0] == "-") {
+                        l = editor.session.addMarker(new aceRange(count_i, 0, count_i, 1), "deletedLine", "fullLine");
+                        highlightedLines.push(l);
+                    } else
+                    if(code[count_i][0] == " ") {
+                        l = editor.session.addMarker(new aceRange(count_i, 0, count_i, 1), "defaultLine", "fullLine");
+                        highlightedLines.push(l);
+                    }
+                    count_i++;
+                }
             }
 
             $("#header-name").append(data.commits[0].comment);
@@ -352,10 +377,12 @@
             $("#progressBar").css("width", currentPercentage + "%");
 
             var files = filesData[0];
-            var editor = ace.edit("editor");
+            editor = ace.edit("editor");
             editor.$blockScrolling = Infinity;
             editor.setOptions({
-                maxLines: Infinity
+                maxLines: Infinity,
+                highlightActiveLine: false,
+                readOnly: true
             });
             var modelist = ace.require("ace/ext/modelist");
 
@@ -413,7 +440,6 @@
 
                 setEditorWindow(files[fileid]);
                 editor.renderer.setShowGutter(false);
-                editor.setReadOnly(true);
 
                 var mode = modelist.getModeForPath("project/" + files[fileid].filename).mode;
                 editor.session.setMode(mode);
@@ -463,7 +489,7 @@
 
             <div class="col-md-8">
                 <ul id="filesSwitcher" class="nav nav-tabs"></ul>
-                <div id="editor" class="noselection"></div>
+                <div id="editor"></div>
             </div>
         </div>
     </div>
