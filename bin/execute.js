@@ -23,9 +23,10 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                     var dates = findData(stdout, "Date:");
                     var commitNumbers = findData(stdout, "commit");
                     var comments = findComments(stdout);
+                    var commit = {};
 
                     for(i=0; i<authors.length; i++) {
-                        var commit = {
+                        commit = {
                             "commit": commitNumbers[i],
                             "author": authors[i],
                             "date": dates[i],
@@ -33,6 +34,7 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                             "content": []
                         };
                         listOfCommits[listOfCommits.length] = commit;
+                        commit = {};
                     }
 
                     var commitsData = listOfCommits.reverse();
@@ -60,21 +62,15 @@ fs.exists(process.cwd() + '/.git', function (exists) {
                 callback(null, commitsData);
             }
         ], function (err, result) {
-            var data = [];
-
-            for(i=0; i<result.length; i++) {
-                data[i] = JSON.stringify(result[i]);
-            }
-
             var dataObject = "var dataObject = { \n" +
                 "\"name\": \"Commits Data\", \n" +
                 "\"commits\": [\n";
 
-            for(i=0; i<data.length; i++) {
-                if(i != data.length-1) {
-                    dataObject += data[i] + ",\n";
+            for(i=0; i<result.length; i++) {
+                if(i != result.length-1) {
+                    dataObject += JSON.stringify(result[i]) + ",\n";
                 } else {
-                    dataObject += data[i] + "\n";
+                    dataObject += JSON.stringify(result[i]) + "\n";
                 }
             }
 
@@ -93,6 +89,8 @@ fs.exists(process.cwd() + '/.git', function (exists) {
             });
         });
     } else {
-        console.error("Directory .git did not found at " + process.cwd());
+        console.error(
+            "Directory .git did not found at " + process.cwd()
+        );
     }
 });
