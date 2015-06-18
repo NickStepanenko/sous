@@ -331,10 +331,7 @@
             function setEditorWindow(file) {
                 editor.session.setValue(file.code, 0);
                 editor.renderer.setShowGutter(false);
-
-                if(currentState > 1) {
-                    highlightLines(file);
-                }
+                highlightLines(file);
 
                 var mode = modelist.getModeForPath("project/" + file.filename).mode;
                 editor.session.setMode(mode);
